@@ -1,0 +1,9 @@
+pandas
+tiktoken
+faiss-cpu
+streamlit
+streamlit_chat
+langchain
+openai
+
+
