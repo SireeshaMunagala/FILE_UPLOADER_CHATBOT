@@ -1,9 +1,9 @@
-venue_name,venue_type,venue_address,website,menu_url,menu_text,phone,email,alcohol,lunch
-McGinnis Sisters,Market,"4311 Northern Pike, Monroeville, PA",http://www.mcginnis-sisters.com/,,,412-858-7000,,,TRUE
+venue_name,venue_type,venue_address,website,menu_url,menu_text,phone,email,Revenue,lunch
+McGinnis Sisters,Market,"4311 Northern Pike, Monroeville, PA",http://www.mcginnis-sisters.com/,,,412-858-7000,,1000,TRUE
 Manor Volunteer Fire Department,Fire Department,"40 Main Street, Manor, Pennsylvania 15665, United States",http://manorvfd.org/,,"Dinners:
 1 Piece Fish Dinner - $8
 2 Piece Fish Dinner - $10
 Al a Carte:
 1 Piece of Fish - $3
 3 Pieces of Shrimp - $2
-",(724) 863-5610,,,FALSE
+",(724) 863-5610,,2000,FALSE

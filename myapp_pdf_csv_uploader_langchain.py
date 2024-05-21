@@ -12,12 +12,6 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 from langchain_community.document_loaders import CSVLoader
 import tempfile
-import sys
-import datetime
-from audio_recorder_streamlit import audio_recorder
-
-global audio_file
-global record_btn
 
 os.environ["OPENAI_API_KEY"] = "Please provide key here"
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -31,40 +25,6 @@ if 'responses' not in st.session_state:
 global target_lang
 global container
 global response_container
-
-def transcribe(audio_file):
-    #transcript = openai.Audio.transcribe("whisper-1", audio_file)
-    transcription = client.audio.transcriptions.create(
-        model="whisper-1",
-        file=audio_file
-    )
-    return transcription
-
-
-def save_audio_file(audio_bytes, file_extension):
-    """
-    Save audio bytes to a file with the specified extension.
-    :param audio_bytes: Audio data in bytes
-    :param file_extension: The extension of the output audio file
-    :return: The name of the saved audio file
-    """
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_name = f"audio_{timestamp}.{file_extension}"
-    with open(file_name, "wb") as f:
-        f.write(audio_bytes)
-    return file_name
-
-
-def transcribe_audio(file_path):
-    """
-    Transcribe the audio file at the specified path.
-    :param file_path: The path of the audio file to transcribe
-    :return: The transcribed text
-    """
-    with open(file_path, "rb") as audio_file:
-        transcript = transcribe(audio_file)
-    #return transcript["text"]
-    return transcript.text
 
 def translate_text(text, source_language, target_language):
     prompt = f"Translate the following '{source_language}' text to '{target_language}': {text}"
@@ -141,28 +101,16 @@ def send_click_csv(csv_file,prompt):
         # extract the text
         if csv_file is not None:
             knowledge_base_csv = acquire_knowledge_base_csv(csv_file)
-            chain = ConversationalRetrievalChain.from_llm(llm=ChatOpenAI(temperature=0.0, model_name='gpt-3.5-turbo'),retriever=knowledge_base_csv.as_retriever())
-            response_csv=conversational_chat(chain, prompt)
-            #response_csv=search_kb_csv(knowledge_base_csv,prompt)
+            #chain = ConversationalRetrievalChain.from_llm(llm=ChatOpenAI(temperature=0.0, model_name='gpt-3.5-turbo'),retriever=knowledge_base_csv.as_retriever())
+            #response_csv=conversational_chat(chain, prompt)
+            response_csv=search_kb_csv(knowledge_base_csv,prompt)
             st.write(response_csv)
             st.session_state['past'].append(prompt)
             st.session_state['generated'].append(response_csv)
 
-def send_click(pdf,prompt,audio_file):
+def send_click(pdf,prompt):
     if st.session_state.user != '':
         prompt = st.session_state.user
-    if audio_file:
-        # Find the newest audio file
-        audio_file_path = max(
-            [f for f in os.listdir(".") if f.startswith("audio")],
-            key=os.path.getctime,
-        )
-        # Transcribe the audio file
-        transcript_text = transcribe_audio(audio_file_path)
-        # Display the transcript
-        st.header("Transcript")
-        st.write(transcript_text)
-        prompt=transcript_text
     if prompt:
         # extract the text
         if pdf is not None:
@@ -172,12 +120,11 @@ def send_click(pdf,prompt,audio_file):
             st.write(response_pdf)
             st.session_state['past'].append(prompt)
             st.session_state['generated'].append(response_pdf)
-            if target_lang:
-                st.write("Translating to - "+ target_lang)
-                source_language = "English"
-                target_language = target_lang
-                translated_text = translate_text(response_pdf, source_language, target_language)
-                st.write(translated_text)
+            st.write("Translating to - "+ target_lang)
+            source_language = "English"
+            target_language = target_lang
+            translated_text = translate_text(response_pdf, source_language, target_language)
+            st.write(translated_text)
             #docs = knowledge_base.invoke(prompt)
             #st.write(docs[0].page_content)
             #st.write(search_kb(knowledge_base, prompt))
@@ -228,26 +175,6 @@ if selected == 'File Uploader':
             csv_file = col2.file_uploader("Upload your CSV File", type="csv")
 
     with col1:
-        options_voice = selectbox(
-            "Choose Voice Option",
-            ["Upload", "Record"])
-
-    st.write("You selected:", options_voice)
-
-    with col2:
-        audio_file = st.file_uploader("Upload Audio", type=["mp3", "mp4", "wav", "m4a"])
-        if audio_file:
-            file_extension = audio_file.type.split('/')[1]
-            save_audio_file(audio_file.read(), file_extension)
-        if ( options_voice == 'Record'):
-            record_btn = st.button('Record')
-            if record_btn:
-                audio_bytes = audio_recorder()
-                if audio_bytes:
-                    st.audio(audio_bytes, format="audio/wav")
-                    save_audio_file(audio_bytes, "mp3")
-
-    with col1:
         prompt = st.text_input("Enter your question here:",key="user")
         options_lang = selectbox(
             "Choose the target language",
@@ -256,9 +183,9 @@ if selected == 'File Uploader':
 
     with col2:
         if (options == 'pdf'):
-            context_search_button = st.button('Search', on_click=send_click(pdf,prompt,audio_file))
+            context_search_button = st.button('Search', on_click=send_click(pdf,prompt))
         elif (options == 'csv'):
-            context_search_button = st.button('Search', on_click=send_click_csv(csv_file, prompt,audio_file))
+            context_search_button = st.button('Search', on_click=send_click_csv(csv_file, prompt))
         # show user input
         # st.text_input("Ask a question about your PDF:", key="user")
         # st.button("Send", on_click=send_click)
